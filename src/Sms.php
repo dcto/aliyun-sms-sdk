@@ -1,6 +1,6 @@
 <?php
 
-namespace Aliyun\Sms;
+namespace Varimax\Aliyun;
 
 class Sms {
 

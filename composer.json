@@ -1,6 +1,6 @@
 {
     "name": "varimax/aliyun-sms-sdk",
-    "description": "Aliyun Sms Sdk",
+    "description": "Varimax Aliyun Sms Sdk",
     "type": "project",
     "keywords": [
         "aliyun",
@@ -11,7 +11,7 @@
     "prefer-stable": true,
     "minimum-stability": "dev",
     "homepage": "http://www.varimax.cn",
-    "version": "v1.0",
+    "version": "v1.1",
     "support": {
         "issues": "https://github.com/dcto/aliyun-sms-sdk/issues",
         "source": "https://github.com/dcto/aliyun-sms-sdk"
