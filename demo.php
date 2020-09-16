@@ -1,5 +1,5 @@
 <?php
-
+require 'src/Sms.php';
 
 use Varimax\Aliyun\Sms;
 

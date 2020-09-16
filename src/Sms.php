@@ -8,7 +8,7 @@ class Sms {
      * @var string $host aliyun sms api host
      */
     protected $host = 'https://dysmsapi.aliyuncs.com';
-
+    
     /**
      * @var array $config
      */
@@ -22,9 +22,33 @@ class Sms {
     );
 
     /**
-     * @var string send phone number
+     * request parameters
      */
-    protected $phone;
+    protected $parameters = array();
+
+    /**
+     * query string
+     */
+    protected $queryString;
+
+
+    public function __construct(array $config = array())
+    {
+        $this->config = array_merge($this->config, $config);
+
+        $this->parameters = array(
+            'SignatureMethod' => "HMAC-SHA1", //固定参数
+            'SignatureVersion' => "1.0",  //固定参数
+            'SignatureNonce' => uniqid(), //用于请求的防重放攻击，每次请求唯一
+            'Timestamp' => str_replace('GM', '', gmdate('Y-m-dTH:i:s') . 'Z'), //date('Y-m-d\TH:i:s\Z'); //格式为：yyyy-MM-dd’T’HH:mm:ss’Z’；时区为：GMT
+            'PhoneNumbers' => null,
+            'TemplateCode' => null,
+            'TemplateParam'=>array(),
+            'Action' => 'SendSms', //api命名 固定子
+            'Version' => '2017-05-25' //api版本 固定值
+        );
+    }
+
 
     /**
      * setting host
@@ -44,7 +68,10 @@ class Sms {
             $this->config = array_merge($this->config, $key);
         }else if($value){
             $this->config[$key] = $value;
+        }else{
+            return $this->config;
         }
+
         return $this;
     }
 
@@ -69,7 +96,8 @@ class Sms {
      */
     public function param($key, $value = null)
     {
-        return $this->config('TemplateParam', is_array($key) ? $key : [$key => $value]);
+        $this->parameters['TemplateParam'] = is_array($key) ? $key : [$key => $value];
+        return $this;
     }
 
     /**
@@ -77,7 +105,7 @@ class Sms {
      */
     public function phone($number)
     {
-        $this->phone = $number;
+        $this->parameters['PhoneNumbers'] = $number;
         return $this;
     }
 
@@ -92,34 +120,58 @@ class Sms {
     }
 
     /**
+     * get parameters 
+     */
+    public function parameters()
+    {
+        return $this->parameters;
+    }
+
+
+    /**
      * send sms
+     * @return bool
      */
     public function send($phone = null, $param = array())
     {
-        $parameters["AccessKeyId"] = $this->config['AccessKeyId']; //key
-        $parameters["RegionId"] = $this->config['RegionId']; //固定参数
-        $parameters["PhoneNumbers"] = $phone?:$this->phone; //手机号
-        $parameters["SignName"] = $this->config['SignName']; //签名
-        $parameters["TemplateCode"] = $this->config['TemplateCode']; //短信模版id
-        $parameters["TemplateParam"] = json_encode($param ?: $this->config['TemplateParam'], JSON_UNESCAPED_UNICODE);  //模版内容
-        $parameters["Format"] = $this->config['Format'];  //返回数据类型,支持xml,json
-        $parameters["SignatureMethod"] = "HMAC-SHA1"; //固定参数
-        $parameters["SignatureVersion"] = "1.0";  //固定参数
-        $parameters["SignatureNonce"] = uniqid(); //用于请求的防重放攻击，每次请求唯一
-        $parameters["Timestamp"] = date('Y-m-d\TH:i:s\Z'); //格式为：yyyy-MM-dd’T’HH:mm:ss’Z’；时区为：GMT
-        $parameters["Action"] = 'SendSms'; //api命名 固定子
-        $parameters["Version"] = '2017-05-25'; //api版本 固定值
+        $send = $this->prepare($phone, $param)->request();
 
-        ksort($parameters);
+        return is_array($send) && isset($send['Code']) && $send['Code'] == 'OK';
+    }
+
+    /**
+     * debug send result
+     * @return array
+     */
+    public function debug($phone = null, $param = array())
+    {
+        return $this->prepare($phone, $param)->request();
+    }
+
+    /**
+     * prepare prepare
+     */
+    protected function prepare($phone = null, $param = array())
+    {
+        $phone && $this->parameters["PhoneNumbers"] = $phone;
+        $param && $this->parameters["TemplateParam"] = $param;
+
+        $this->parameters["AccessKeyId"] = $this->config['AccessKeyId']; //key
+        $this->parameters["RegionId"] = $this->config['RegionId']; //固定参数
+        $this->parameters["SignName"] = $this->config['SignName']; //签名
+        $this->parameters["TemplateCode"] = $this->config['TemplateCode']; //短信模版id
+        $this->parameters["Format"] = $this->config['Format'];  //返回数据类型,支持xml,json
+        $this->parameters['TemplateParam'] = json_encode($this->parameters['TemplateParam'], JSON_UNESCAPED_UNICODE);  //模版内容
+
+        ksort($this->parameters);
         $canonicalizedQueryString = '';
-        foreach ($parameters as $key => $value) {
+        foreach ($this->parameters as $key => $value) {
             $canonicalizedQueryString .= "&" . $this->encode($key) . "=" . $this->encode($value);
         }
-
         $signature = $this->signature($canonicalizedQueryString, $this->config['AccessKeySecret']);  //最终生成的签名结果值
+        $this->queryString = $this->host."?Signature={$signature}{$canonicalizedQueryString}";
 
-        $url = $this->host."?Signature={$signature}{$canonicalizedQueryString}";
-        return $this->request($url);
+        return $this;
     }
 
     /**
@@ -130,7 +182,6 @@ class Sms {
         $stringToSign = "GET&%2F&" . $this->encode(substr($canonicalizedQueryString, 1));
         return $this->encode(base64_encode(hash_hmac('sha1', $stringToSign, $accessKeySecret . "&", true)));
     }
-
 
     /**
      * encoding the url
@@ -147,16 +198,16 @@ class Sms {
     /**
      * send request
      */
-    protected function request($url)
+    protected function request()
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_URL, $this->queryString);
         curl_setopt($ch, CURLOPT_FAILONERROR, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $httpResponse = curl_exec($ch);
         if ($httpResponse) {
-            return json_decode($httpResponse);
+            return json_decode($httpResponse, true);
         } else {
             return json_decode(curl_error($ch));
         }
