@@ -1,0 +1,25 @@
+{
+    "name": "varimax/aliyun-sms-sdk",
+    "description": "Aliyun Sms Sdk",
+    "type": "project",
+    "keywords": [
+        "aliyun",
+        "aliyun-sms",
+        "阿里云短信接口SDK"
+    ],
+    "license": "MIT",
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "homepage": "http://www.varimax.cn",
+    "version": "v1.0",
+    "support": {
+        "issues": "https://github.com/dcto/aliyun-sms-sdk/issues",
+        "source": "https://github.com/dcto/aliyun-sms-sdk"
+    },
+    "authors": [
+        {
+            "name": "Sem.dc",
+            "email": "sdoz@live.com"
+        }
+    ]
+}
