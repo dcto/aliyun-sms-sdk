@@ -6,6 +6,7 @@
 
 1、引入Sms.php
 ```
+use Varimax\Aliyun\Sms;
 $sms = new Sms;
 ```
 2、修改获取配置信息
@@ -20,16 +21,29 @@ $sms->config(array(
 ```
 
 3、修改`TemplateParam`短信模板变量
-
-发送验证码和短信通知，需要替换短信模板变量JSON串，修改为你所需要对应的变量，如
+可以调用模板变量方式
+```
+$templateCode='SMS_2341135685';
+$templateParam = array('code'=>'1234');
+$sms->template($templateCode, $templateParam);
+```
+也可以使用`with`方法替换模板变量
 ```
 $sms->with('code', 5555);
 ```
-4、调用`send`方法发送短信
+
+4、调用`phone`方法设置要发送的号码
+```
+$sms->phone(13800138000);
+```
+
+4、或直接调用`send`方法发送短信
 
 ```
-$sms->send(13800138000);
+$sms->send(13800138000, array('code'=>5555));
 ```
+
+
 
 ## 错误码列表
 

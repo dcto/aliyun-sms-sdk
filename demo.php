@@ -1,8 +1,7 @@
 <?php
 
-use Aliyun\Sms\Sms;
 
-require 'Sms.php';
+use Varimax\Aliyun\Sms;
 
 $sms = new Sms;
 

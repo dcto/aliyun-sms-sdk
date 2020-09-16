@@ -11,7 +11,7 @@
     "prefer-stable": true,
     "minimum-stability": "dev",
     "homepage": "http://www.varimax.cn",
-    "version": "v1.1",
+    "version": "v1.2",
     "support": {
         "issues": "https://github.com/dcto/aliyun-sms-sdk/issues",
         "source": "https://github.com/dcto/aliyun-sms-sdk"
@@ -21,5 +21,11 @@
             "name": "Sem.dc",
             "email": "sdoz@live.com"
         }
-    ]
+    ],
+
+    "autoload": {
+        "psr-4": {
+            "Varimax\\Aliyun": "src/"
+        }
+    }
 }
