@@ -21,6 +21,8 @@ class Sms {
         'Format' => 'JSON',
     );
 
+    protected $response = null;
+
     /**
      * request parameters
      */
@@ -149,6 +151,14 @@ class Sms {
     }
 
     /**
+     * get response
+     */
+    public function response()
+    {
+        return $this->response;
+    }
+
+    /**
      * prepare prepare
      */
     protected function prepare($phone = null, $param = array())
@@ -205,9 +215,9 @@ class Sms {
         curl_setopt($ch, CURLOPT_URL, $this->queryString);
         curl_setopt($ch, CURLOPT_FAILONERROR, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $httpResponse = curl_exec($ch);
-        if ($httpResponse) {
-            return json_decode($httpResponse, true);
+        $this->response = curl_exec($ch);
+        if ($this->response) {
+            return json_decode($this->response, true);
         } else {
             return json_decode(curl_error($ch));
         }
