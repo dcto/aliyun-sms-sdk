@@ -8,7 +8,7 @@ class Sms {
      * @var string $host aliyun sms api host
      */
     protected $host = 'https://dysmsapi.aliyuncs.com';
-    
+
     /**
      * @var array $config
      */
@@ -94,7 +94,7 @@ class Sms {
     }
 
     /**
-     * set parameters 
+     * set parameters
      */
     public function param($key, $value = null)
     {
@@ -122,7 +122,7 @@ class Sms {
     }
 
     /**
-     * get parameters 
+     * get parameters
      */
     public function parameters()
     {
@@ -134,9 +134,9 @@ class Sms {
      * send sms
      * @return bool
      */
-    public function send($phone = null, $param = array())
+    public function send($phone = null, $param = array(), $options = array())
     {
-        $send = $this->prepare($phone, $param)->request();
+        $send = $this->prepare($phone, $param)->request($options);
 
         return is_array($send) && isset($send['Code']) && $send['Code'] == 'OK';
     }
@@ -145,9 +145,9 @@ class Sms {
      * debug send result
      * @return array
      */
-    public function debug($phone = null, $param = array())
+    public function debug($phone = null, $param = array(), $options = array())
     {
-        return $this->prepare($phone, $param)->request();
+        return $this->prepare($phone, $param)->request($options);
     }
 
     /**
@@ -208,19 +208,25 @@ class Sms {
     /**
      * send request
      */
-    protected function request()
+    protected function request($options)
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_URL, $this->queryString);
         curl_setopt($ch, CURLOPT_FAILONERROR, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        if (!empty($options['no_ssl'])) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        }
         $this->response = curl_exec($ch);
         if ($this->response) {
+            curl_close($ch);
             return json_decode($this->response, true);
         } else {
-            return json_decode(curl_error($ch));
+            $error = curl_error($ch);
+            curl_close($ch);
+            return $error;
         }
-        curl_close($ch);
     }
 }
